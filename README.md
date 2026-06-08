@@ -119,6 +119,22 @@ Observed result:
 
 - `Format-Hex` still starts with `FF FE`.
 - Local Git renders a clean readable SQL diff.
+- GitHub renders a clean readable SQL diff.
+
+### 7. Add Realistic UTF-16 SQL Script
+
+Adds a more realistic SQL Server script while keeping `test.sql` saved from SSMS as `Unicode - Code page 1200`.
+
+Expected result:
+
+- `Format-Hex` still starts with `FF FE`.
+- Local Git renders a readable SQL diff.
+- GitHub renders a readable SQL diff.
+
+Observed result:
+
+- `Format-Hex` still starts with `FF FE`.
+- Local Git renders a readable SQL diff.
 - GitHub result: TODO
 
 ## Evidence Summary
@@ -129,7 +145,8 @@ Observed result:
 | 3 | Modify CP1252 SQL | Pass | Pass |
 | 4 | Save/modify as UTF-16 LE BOM | Binary | Binary file not shown |
 | 5 | Add UTF-16 working tree encoding | Renormalized text | Binary file not shown |
-| 6 | Modify UTF-16 SQL after attributes exist | Pass | TODO |
+| 6 | Modify UTF-16 SQL after attributes exist | Pass | Pass |
+| 7 | Add realistic UTF-16 SQL script | Pass | TODO |
 
 ## Why This Matters
 
