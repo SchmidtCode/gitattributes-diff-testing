@@ -103,6 +103,22 @@ Observed result:
 
 - Local Git showed a readable normalized SQL side after `git add --renormalize test.sql`.
 - The working tree file still starts with `FF FE`.
+- GitHub still shows `Binary file not shown`.
+
+### 6. Modify UTF-16 SQL After Attributes Exist
+
+Makes another small SQL change after `.gitattributes` is already present in the base commit.
+
+Expected result:
+
+- Local Git should render a clean SQL text diff.
+- The working tree file should still start with `FF FE`.
+- GitHub should ideally render the SQL diff if it honors the Git attributes.
+
+Observed result:
+
+- `Format-Hex` still starts with `FF FE`.
+- Local Git renders a clean readable SQL diff.
 - GitHub result: TODO
 
 ## Evidence Summary
@@ -112,7 +128,8 @@ Observed result:
 | 2 | Add CP1252 SQL | Pass | Pass |
 | 3 | Modify CP1252 SQL | Pass | Pass |
 | 4 | Save/modify as UTF-16 LE BOM | Binary | Binary file not shown |
-| 5 | Add UTF-16 working tree encoding | Renormalized text | TODO |
+| 5 | Add UTF-16 working tree encoding | Renormalized text | Binary file not shown |
+| 6 | Modify UTF-16 SQL after attributes exist | Pass | TODO |
 
 ## Why This Matters
 
