@@ -1,0 +1,5 @@
+# Default text handling
+* text=auto
+
+# SSMS SQL files saved as UTF-16 little-endian with BOM
+*.sql text working-tree-encoding=UTF-16LE-BOM eol=crlf diff
