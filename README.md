@@ -1,35 +1,29 @@
 # gitattributes-diff-testing
 
-Minimal repro for GitHub's handling of SQL files saved by SQL Server Management Studio (SSMS) as Western European Windows code page 1252.
+Minimal repro for GitHub diff behavior with SQL files saved from SQL Server Management Studio (SSMS) using different encodings.
 
 ## Point Of This Repo
 
-SSMS can save `.sql` files as `Western European (Windows) - Code page 1252`. GitHub appears to support `.gitattributes` content-encoding hints for some file types, but may still fail to show useful diffs for SSMS-style SQL files.
+SSMS can save `.sql` files as `Western European (Windows) - Code page 1252` or as `Unicode - Code page 1200` / UTF-16 LE with BOM.
 
-This repo is intended to prove the gap with a small commit history a maintainer can inspect quickly.
+This repo checks which SSMS encodings GitHub can diff correctly, and whether `.gitattributes` encoding hints could improve SQL review in GitHub pull requests.
 
 ## Test Pattern
 
-Compare GitHub's rendered diff against local Git output for each commit:
+For each commit, compare GitHub's rendered diff with local Git output:
 
 ```powershell
 git check-attr -a -- test.sql
 git diff HEAD~1 HEAD -- test.sql
+Format-Hex -Path .\test.sql -Count 160
 ```
 
-Inspect the first bytes of the file:
-
-```powershell
-Format-Hex -Path .\test.sql -Count 16
-```
-
-For plain ASCII-range SQL text, CP1252, UTF-8, and ASCII can look identical in this output. To prove the encoding matters, include at least one CP1252-specific character in the SQL file, such as a pound sign or accented character.
-
-Example CP1252 bytes to look for:
+Encoding clues:
 
 ```text
-A3    # pound sign
-E9    # e acute
+A3       CP1252 pound sign
+E9       CP1252 e acute
+FF FE    UTF-16 LE BOM
 ```
 
 ## Repro Commits
@@ -38,48 +32,61 @@ E9    # e acute
 
 README only.
 
-### 2. Add `test.sql` From SSMS
+### 2. Add CP1252 SQL From SSMS
 
-Adds a `.sql` file saved from SSMS as Western European Windows code page 1252, before any `.gitattributes` rule exists.
+Adds `test.sql` saved from SSMS as `Western European (Windows) - Code page 1252`.
 
 Expected result:
 
-- GitHub may render non-ASCII CP1252 characters incorrectly or fail to render a useful text diff.
+- GitHub renders the file as a readable SQL diff.
+- Non-ASCII probe characters may reveal decoding differences.
 
 Observed result:
 
 - TODO
 
-### 3. Add `.gitattributes` And Modify `test.sql`
+### 3. Modify CP1252 SQL
+
+Makes a normal SQL change while keeping the file saved as CP1252.
+
+Expected result:
+
+- Local Git renders a text diff.
+- GitHub renders a readable SQL diff.
+
+Observed result:
+
+- TODO
+
+### 4. Save As UTF-16 LE With BOM
+
+Re-save or replace `test.sql` from SSMS using `Unicode - Code page 1200`, then make a small SQL change.
+
+Expected result:
+
+- `Format-Hex` starts with `FF FE`.
+- Local Git or GitHub may treat the file as binary or fail to render a useful text diff.
+
+Observed result:
+
+- TODO
+
+### 5. Add `.gitattributes` Encoding Hint
 
 Adds:
 
 ```gitattributes
 # set content encodings
 *     encoding=UTF-8
-*.sql encoding=CP1252 text
+*.sql encoding=UTF-16LE text
 ```
 
-Then makes a small SQL change.
+Then makes another small SQL change.
 
 Expected result:
 
-- `git check-attr` should show `test.sql` matched with `encoding=CP1252` and `text`.
-- GitHub should ideally use that encoding hint to render a readable SQL diff.
-- If GitHub does not honor the hint for diffs, the SQL diff may still render incorrectly or appear binary-like.
-
-Observed result:
-
-- TODO
-
-### 4. Modify `test.sql` Again
-
-Changes the SQL file after `.gitattributes` already exists.
-
-Expected result:
-
-- If GitHub honors the `encoding=CP1252 text` rule for diffs, this should render as readable SQL.
-- If not, the diff remains unreadable or binary-like.
+- `git check-attr` shows `test.sql` matched with `encoding=UTF-16LE` and `text`.
+- GitHub should ideally use that hint to render a readable SQL diff.
 
 Observed result:
 
@@ -89,10 +96,11 @@ Observed result:
 
 | Commit | Scenario | Local Git | GitHub |
 | --- | --- | --- | --- |
-| 2 | CP1252 SQL, no attributes | TODO | TODO |
-| 3 | Add `encoding=CP1252 text` and modify SQL | TODO | TODO |
-| 4 | Modify SQL after encoding rule exists | TODO | TODO |
+| 2 | Add CP1252 SQL | TODO | TODO |
+| 3 | Modify CP1252 SQL | TODO | TODO |
+| 4 | Save/modify as UTF-16 LE BOM | TODO | TODO |
+| 5 | Add UTF-16 `.gitattributes` hint | TODO | TODO |
 
 ## Why This Matters
 
-SQL Server users often review database changes through GitHub pull requests. If GitHub cannot render diffs for SSMS-generated CP1252 SQL files even when `.gitattributes` declares the file encoding, reviewers lose normal code review for a common Microsoft SQL workflow.
+SQL Server users review database changes in GitHub pull requests. If GitHub cannot render SSMS-generated SQL diffs for common encodings, reviewers lose normal code review for a common Microsoft SQL workflow.
